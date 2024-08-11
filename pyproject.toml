@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "gitlab-webhook-gateway"
+version = "0.1.0"
+description = ""
+authors = ["Rastorguev763 <alex.rastorguev@bk.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+black = "^24.8.0"
+pydantic = "^2.8.2"
+fastapi = "^0.112.0"
+isort = "^5.13.2"
+pydantic-settings = "^2.4.0"
+uvicorn = "^0.30.5"
+requests = "^2.32.3"
+orjson = "^3.10.7"
+aiogram = "^3.11.0"
+logging = "^0.4.9.6"
+colorlog = "^6.8.2"
+python-json-logger = "^2.0.7"
+jsons = "^1.6.3"
+pytz = "^2024.1"
+python-gitlab = "^4.9.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311']
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 120
+skip = '**/migrations/*,**/migrations/,**/.venv/*'
