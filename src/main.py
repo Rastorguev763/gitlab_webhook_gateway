@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import ORJSONResponse
 
-from api.v1 import webhook_view, bot_view
+from api.v1 import bot_view, webhook_view
 from core.settings import settings
 
 app = FastAPI(

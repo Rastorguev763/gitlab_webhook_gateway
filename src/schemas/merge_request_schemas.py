@@ -1,6 +1,7 @@
-import pytz
 from datetime import datetime
 from typing import List, Optional
+
+import pytz
 from pydantic import BaseModel, field_validator
 
 

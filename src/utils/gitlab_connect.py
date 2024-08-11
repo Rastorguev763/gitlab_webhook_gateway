@@ -1,14 +1,20 @@
 from typing import List
+
 from gitlab import Gitlab
 
 from core.settings import settings
-
-from utils.utils_schemas.gitlab_schemas import ProjectCommit, Project
+from utils.utils_schemas.gitlab_schemas import Project, ProjectCommit
 
 # from gitlab.v4.objects.projects import Project
 
 
 class GitlabConnect:
+    """
+    def example_usage(self):
+        project = self.get_projects(1)  # Получаем проект с ID 1
+        commits = self.get_commits(project, "main")  # Получаем коммиты для ветки "master"
+        return commits
+    """
 
     def __init__(self):
         self.gl = Gitlab(url=settings.URL_GITLAB, private_token=settings.PRIVATE_TOKEN)
@@ -20,11 +26,6 @@ class GitlabConnect:
 
     def get_commits(self, project: Project, branch_name: str) -> List[ProjectCommit]:
         commits = project.commits.list(ref_name=branch_name)
-        return commits
-
-    def example_usage(self):
-        project = self.get_projects(6)  # Получаем проект с ID 1
-        commits = self.get_commits(project, "test_branch")  # Получаем коммиты для ветки "master"
         return commits
 
 

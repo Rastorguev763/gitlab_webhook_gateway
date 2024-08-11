@@ -19,6 +19,7 @@ class Setting(BaseSettings):
     BOT_TOKEN: str = Field(default=None, alias="BOT_TOKEN", required=True)
     SERVER_URL: str = Field(default="", alias="SERVER_URL")
     CHAT_ID: str = Field(default="", alias="CHAT_ID", required=True)
+    THREAD_ID: int = Field(default="", alias="THREAD_ID")
 
     # Настройки логирования
     LOGGING_LEVEL: str = Field(default="DEBUG", alias="LOGGING_LEVEL")

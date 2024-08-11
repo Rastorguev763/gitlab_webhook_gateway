@@ -2,8 +2,8 @@ from functools import lru_cache
 
 from core.settings import settings
 from schemas.merge_request_schemas import WebhookPayload
-from utils.gitlab_connect import gitlab_connect
 from utils.bot import send_telegram_message
+from utils.gitlab_connect import gitlab_connect
 
 
 class CreateMessage:

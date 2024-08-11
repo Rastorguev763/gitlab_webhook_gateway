@@ -1,8 +1,9 @@
 # bot_main.py
 
 from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+
 from core.settings import settings
 from telegram_bot.routers import main_router
 
