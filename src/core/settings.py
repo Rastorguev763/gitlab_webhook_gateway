@@ -11,6 +11,9 @@ class Setting(BaseSettings):
     PROJECT_NAME: str = Field(default="Gitlab gateway", alias="PROJECT_NAME")
     TYPING: bool = False
 
+    # Настройки базы данных SQLite
+    DABABASE_NAME: str = Field(default="GilabGeteway", alias="DABABASE_NAME")
+
     # Настройки GitLab репозитория
     PRIVATE_TOKEN: str = Field(default="", alias="PRIVATE_TOKEN", required=True)
     URL_GITLAB: str = Field(default="https://gitlab.com/", alias="URL_GITLAB")
@@ -34,6 +37,18 @@ class Setting(BaseSettings):
         os.makedirs(settings.LOG_DIRECTORY, exist_ok=True)
 
         return os.path.join(self.LOG_DIRECTORY, "debug.log")
+
+    @property
+    def database_url_async(self):
+        return "sqlite+aiosqlite:///./{name}.db".format(
+            name=self.DABABASE_NAME,
+        )
+
+    @property
+    def database_url_sync(self):
+        return "sqlite:///./{name}.db".format(
+            name=self.DABABASE_NAME,
+        )
 
 
 settings = Setting()
