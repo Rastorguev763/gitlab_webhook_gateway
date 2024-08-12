@@ -13,6 +13,7 @@ class Message(Base):
     caht_id: Mapped[int] = mapped_column(nullable=False)
     message_id: Mapped[int] = mapped_column(nullable=False)
     merge_request_id: Mapped[int] = mapped_column(nullable=False)
+    project_name: Mapped[str] = mapped_column(nullable=False)
     action_merge_request: Mapped[str] = mapped_column(nullable=True)
     status_merge_request: Mapped[str] = mapped_column(nullable=True)
     created_at_merge_request: Mapped[datetime] = mapped_column(nullable=True)
