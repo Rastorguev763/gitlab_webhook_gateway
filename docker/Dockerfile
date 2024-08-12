@@ -26,7 +26,7 @@ COPY ./.env ./
 COPY ./src/ ./src
 COPY ./migrations/ ./migrations
 COPY ./alembic.ini ./
-COPY pyproject.toml  poetry.lock ./
+COPY pyproject.toml ./
 RUN poetry install
 COPY ./docker/start.sh ./start.sh
 RUN chmod 777 start.sh

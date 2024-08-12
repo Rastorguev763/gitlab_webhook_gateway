@@ -23,8 +23,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-app.include_router(webhook_view.router, prefix="/api/v1/webhook", tags=["gitlab"])
-app.include_router(bot_view.router, prefix="/api/v1/bot", tags=["gitlab"])
+app.include_router(webhook_view.router, prefix="/gitlab-gateway/api/v1/webhook", tags=["gitlab"])
+app.include_router(bot_view.router, prefix="/gitlab-gateway/api/v1/bot", tags=["gitlab"])
 
 
 if __name__ == "__main__":
