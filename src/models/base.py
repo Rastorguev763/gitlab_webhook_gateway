@@ -2,8 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Annotated
 
-from sqlalchemy import String
-from sqlalchemy import text as text_
+from sqlalchemy import String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 uuid_pk = Annotated[
@@ -19,9 +18,9 @@ class Base(DeclarativeBase):
 
     id: Mapped[uuid_pk]
     created_at: Mapped[datetime] = mapped_column(
-        server_default=text_("TIMEZONE('utc', now())"), onupdate=datetime.now(timezone.utc)
+        server_default=func.datetime('now', 'utc'), onupdate=datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text_("TIMEZONE('utc', now())"), onupdate=datetime.now(timezone.utc)
+        server_default=func.datetime('now', 'utc'), onupdate=datetime.now(timezone.utc)
     )
     type_annotation_map = {str_255: String(255)}
