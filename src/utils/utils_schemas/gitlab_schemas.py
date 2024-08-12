@@ -108,8 +108,6 @@ class Project(BaseModel):
     feature_flags_access_level: str
     infrastructure_access_level: str
     monitor_access_level: str
-    model_experiments_access_level: str
-    model_registry_access_level: str
     emails_disabled: bool
     emails_enabled: bool
     shared_runners_enabled: bool

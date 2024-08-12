@@ -1,7 +1,7 @@
 # __init__.py
 from aiogram import Router
 
-from telegram_bot.routers import base_commad_tg_route
+from src.telegram_bot.routers import base_commad_tg_route
 
 main_router = Router()
 
