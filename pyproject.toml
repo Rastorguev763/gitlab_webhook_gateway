@@ -25,6 +25,7 @@ python-gitlab = "^4.9.0"
 sqlalchemy = "^2.0.32"
 aiosqlite = "^0.20.0"
 alembic = "^1.13.2"
+gunicorn = "^23.0.0"
 
 
 [build-system]
