@@ -1,14 +1,15 @@
 from functools import lru_cache
+from sqlalchemy import select
 
 from fastapi import Depends
 
-from core.settings import settings
-from schemas.merge_request_schemas import WebhookPayload
-from db.aiosqlite import get_async_session
-from service.base_service import BaseService
-from utils.bot import send_telegram_message
-from utils.gitlab_connect import gitlab_connect
-from models.message import Message
+from src.core.settings import settings
+from src.schemas.merge_request_schemas import WebhookPayload
+from src.db.aiosqlite import get_async_session
+from src.service.base_service import BaseService
+from src.utils.bot import send_telegram_message
+from src.utils.gitlab_connect import gitlab_connect
+from src.models.message import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -42,13 +43,37 @@ class CreateMessageService(BaseService):
         text += "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
         for commit in commits:
             text += f"<b>{commit.author_name}</b> - {commit.message}"
-        await send_telegram_message(chat_id=settings.CHAT_ID, message=text)
-
+        msg = await send_telegram_message(chat_id=settings.CHAT_ID, message=text)
+        print(f'\n\n{msg}\n\n')
+        # message = Message(
+        #                   telegram_id: Mapped[int] = mapped_column(nullable=False)
+        #     chat_id=settings.CHAT_ID,
+        #                     tread: Mapped[int] = mapped_column(nullable=True)
+        #                     caht_id: Mapped[int] = mapped_column(nullable=False)
+        #                     message_id: Mapped[int] = mapped_column(nullable=False)
+        #                     merge_request_id: Mapped[int] = mapped_column(nullable=False)
+        #                     action_merge_request: Mapped[str] = mapped_column(nullable=True)
+        #                     status_merge_request: Mapped[str] = mapped_column(nullable=True)
+        #                     created_at_merge_request: Mapped[datetime] = mapped_column(nullable=True)
+        #                     updated_at_merge_request: Mapped[datetime] = mapped_column(nullable=True))
         return "success"
+
+    async def get_message_by_tg_id(
+        self,
+        message_id: int,
+        merge_request_id: int,
+    ) -> Message:
+        message_result = await self._session.execute(
+            select(Message)
+            .filter(Message.message_id == message_id)
+            .filter(Message.merge_request_id == merge_request_id)
+        )
+        message = message_result.scalar_one_or_none()
+        return message
 
 
 @lru_cache()
 def get_create_message_service(
-    session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
 ) -> CreateMessageService:
     return CreateMessageService(session)

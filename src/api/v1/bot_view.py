@@ -4,8 +4,8 @@ import aiogram
 from aiogram import types
 from fastapi import APIRouter, FastAPI
 
-from core.settings import settings
-from telegram_bot.bot_main import bot, dp
+from src.core.settings import settings
+from src.telegram_bot.bot_main import bot, dp
 
 WEBHOOK_URL = f"{settings.SERVER_URL}/api/v1/bot/{settings.BOT_TOKEN}"
 

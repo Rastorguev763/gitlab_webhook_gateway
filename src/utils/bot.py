@@ -1,4 +1,4 @@
-from telegram_bot.bot_main import bot
+from src.telegram_bot.bot_main import bot
 
 
 async def send_telegram_message(chat_id: int, message: str, thread_id: int = None):

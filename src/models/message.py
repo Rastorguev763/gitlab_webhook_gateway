@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
+from src.models.base import Base
 
 
 class Message(Base):

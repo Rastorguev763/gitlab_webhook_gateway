@@ -2,8 +2,8 @@ from typing import List
 
 from gitlab import Gitlab
 
-from core.settings import settings
-from utils.utils_schemas.gitlab_schemas import Project, ProjectCommit
+from src.core.settings import settings
+from src.utils.utils_schemas.gitlab_schemas import Project, ProjectCommit
 
 # from gitlab.v4.objects.projects import Project
 

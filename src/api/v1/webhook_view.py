@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from core.logger import logger
-from schemas.merge_request_schemas import WebhookPayload
-from service.create_message_service import CreateMessageService, get_create_message_service
+from src.core.logger import logger
+from src.schemas.merge_request_schemas import WebhookPayload
+from src.service.create_message_service import CreateMessageService, get_create_message_service
 
 router = APIRouter()
 
