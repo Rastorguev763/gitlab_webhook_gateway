@@ -41,7 +41,7 @@ class CreateMessageService(BaseService):
                 )
                 await send_telegram_message(
                     chat_id=settings.CHAT_ID,
-                    message=f"Смержено! 🥳👏🏻\nвсе валить на <b>{data.user.name}</b> ",
+                    message=f"Смержено! 🥳👏🏻\nВсе валить на <b>{data.user.name}</b> ",
                     reply_to_message_id=one_message.message_id,
                 )
             case "opened":
