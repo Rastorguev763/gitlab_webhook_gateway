@@ -10,6 +10,7 @@ import aiogram
 
 
 from src.core.settings import settings
+from src.core.logger import logger
 from src.telegram_bot.bot_main import dp, bot
 
 WEBHOOK_URL = f"{settings.SERVER_URL}/gitlab-gateway/api/v1/bot"
@@ -19,11 +20,12 @@ router = APIRouter()
 
 @router.on_event("startup")
 async def on_startup() -> None:
-    print(f"WEBHOOK_URL: {WEBHOOK_URL}")
+    logger.debug(f"WEBHOOK_URL: {WEBHOOK_URL}")
     """Обработчик события "startup" для FastAPI."""
     # Получаем информацию о текущем вебхуке бота
     try:
         webhook_info = await bot.get_webhook_info()
+        logger.debug(webhook_info)
         # Если URL вебхука не совпадает с ожидаемым URL, устанавливаем вебхук
         if webhook_info.url != WEBHOOK_URL:
             await set_webhook_with_retry(bot, WEBHOOK_URL)
