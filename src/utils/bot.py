@@ -5,7 +5,7 @@ async def send_telegram_message(
     chat_id: int, message: str, thread_id: int = None, reply_to_message_id: int = None
 ):
     """Асинхронная функция для отправки сообщения через Telegram бота."""
-    if thread_id:
+    if thread_id != 0:
         return await bot.send_message(
             chat_id=chat_id,
             text=message,
