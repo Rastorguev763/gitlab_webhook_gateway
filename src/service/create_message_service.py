@@ -43,6 +43,7 @@ class CreateMessageService(BaseService):
                     chat_id=settings.CHAT_ID,
                     message=f"Смержено! 🥳👏🏻\nВсе валить на <b>{data.user.name}</b> ",
                     reply_to_message_id=one_message.message_id,
+                    thread_id=settings.THREAD_ID,
                 )
             case "opened":
                 if data.object_attributes.action == "approved":
@@ -53,6 +54,7 @@ class CreateMessageService(BaseService):
                         chat_id=settings.CHAT_ID,
                         message=f"<b>👤 {data.user.name}</b> за качество отвечает. Апрувнуто! 💪🏻",
                         reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
                     )
                 elif data.object_attributes.action == "reopen":
                     one_message = await self.get_message_by_tg_id(
@@ -62,6 +64,7 @@ class CreateMessageService(BaseService):
                         chat_id=settings.CHAT_ID,
                         message=f"<b>👤 {data.user.name}</b> сново открыл слияние! 👋🏻",
                         reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
                     )
                 elif data.object_attributes.action == "unapproved":
                     one_message = await self.get_message_by_tg_id(
@@ -71,10 +74,13 @@ class CreateMessageService(BaseService):
                         chat_id=settings.CHAT_ID,
                         message=f"<b>👤 {data.user.name}</b> апрув отозвал! 👎🏻",
                         reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
                     )
                 else:
                     msg = await send_telegram_message(
-                        chat_id=settings.CHAT_ID, message=await self.create_message_text(data=data)
+                        thread_id=settings.THREAD_ID,
+                        chat_id=settings.CHAT_ID,
+                        message=await self.create_message_text(data=data),
                     )
                     message.message_id = msg.message_id
 
@@ -82,12 +88,13 @@ class CreateMessageService(BaseService):
                     await self._session.commit()
             case "closed":
                 one_message = await self.get_message_by_tg_id(
-                        merge_request_id=data.object_attributes.iid, project_name=data.project.name
-                    )
+                    merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                )
                 await send_telegram_message(
                     chat_id=settings.CHAT_ID,
                     message=f"<b>👤 {data.user.name}</b> закрыл слияние! 😭",
                     reply_to_message_id=one_message.message_id,
+                    thread_id=settings.THREAD_ID,
                 )
         return "success"
 
