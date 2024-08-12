@@ -64,5 +64,5 @@
 Для запуска приложения используйте следующую команду:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8050 --reload
+uvicorn src.main:app --host 0.0.0.0 --port 8050 --reload
 ```

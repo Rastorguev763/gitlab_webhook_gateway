@@ -1,14 +1,113 @@
 from functools import lru_cache
+from sqlalchemy import select
 
-from core.settings import settings
-from schemas.merge_request_schemas import WebhookPayload
-from utils.bot import send_telegram_message
-from utils.gitlab_connect import gitlab_connect
+from fastapi import Depends
+
+from src.core.settings import settings
+from src.schemas.merge_request_schemas import WebhookPayload
+from src.db.aiosqlite import get_async_session
+from src.service.base_service import BaseService
+from src.utils.bot import send_telegram_message
+from src.utils.gitlab_connect import gitlab_connect
+from src.models.message import Message
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class CreateMessage:
+class CreateMessageService(BaseService):
+    model = Message
+
+    def __init__(self, session: AsyncSession):
+        super().__init__(session)
 
     async def create_message_merge_request(self, data: WebhookPayload) -> str:
+
+        message = Message(
+            telegram_id=settings.BOT_TOKEN.split(":")[0],
+            tread=settings.THREAD_ID,
+            caht_id=settings.CHAT_ID,
+            merge_request_id=data.object_attributes.iid,
+            project_name=data.project.name,
+            action_merge_request=data.object_attributes.action,
+            status_merge_request=data.object_attributes.state,
+            # TODO: доделать время
+            # created_at_merge_request=data.object_attributes.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            # updated_at_merge_request =
+        )
+
+        match message.status_merge_request:
+            case "merged":
+                one_message = await self.get_message_by_tg_id(
+                    merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                )
+                await send_telegram_message(
+                    chat_id=settings.CHAT_ID,
+                    message=f"Смержено! 🥳👏🏻\nВсе валить на <b>{data.user.name}</b> ",
+                    reply_to_message_id=one_message.message_id,
+                )
+            case "opened":
+                if data.object_attributes.action == "approved":
+                    one_message = await self.get_message_by_tg_id(
+                        merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                    )
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message=f"<b>👤 {data.user.name}</b> за качество отвечает. Апрувнуто! 💪🏻",
+                        reply_to_message_id=one_message.message_id,
+                    )
+                elif data.object_attributes.action == "reopen":
+                    one_message = await self.get_message_by_tg_id(
+                        merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                    )
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message=f"<b>👤 {data.user.name}</b> сново открыл слияние! 👋🏻",
+                        reply_to_message_id=one_message.message_id,
+                    )
+                elif data.object_attributes.action == "unapproved":
+                    one_message = await self.get_message_by_tg_id(
+                        merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                    )
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message=f"<b>👤 {data.user.name}</b> апрув отозвал! 👎🏻",
+                        reply_to_message_id=one_message.message_id,
+                    )
+                else:
+                    msg = await send_telegram_message(
+                        chat_id=settings.CHAT_ID, message=await self.create_message_text(data=data)
+                    )
+                    message.message_id = msg.message_id
+
+                    self._session.add(message)
+                    await self._session.commit()
+            case "closed":
+                one_message = await self.get_message_by_tg_id(
+                        merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                    )
+                await send_telegram_message(
+                    chat_id=settings.CHAT_ID,
+                    message=f"<b>👤 {data.user.name}</b> закрыл слияние! 😭",
+                    reply_to_message_id=one_message.message_id,
+                )
+        return "success"
+
+    async def get_message_by_tg_id(
+        self,
+        project_name: str,
+        merge_request_id: int,
+    ) -> Message:
+        message_result = await self._session.execute(
+            select(Message)
+            .filter(Message.project_name == project_name)
+            .filter(Message.merge_request_id == merge_request_id)
+        )
+        message = message_result.scalar_one_or_none()
+        return message
+
+    async def create_message_text(
+        self,
+        data: WebhookPayload,
+    ) -> str:
         text = (
             f"<b>📬 <a href='{data.object_attributes.url}'>"
             f"Запрос на слияние № {data.object_attributes.iid}</a></b>\n\n"
@@ -23,20 +122,54 @@ class CreateMessage:
         match data.object_attributes.merge_status:
             case "can_be_merged":
                 text += "<b>✅ Конфилктов слияния нет.</b>"
+            case "checking":
+                text += "<b>✅ Конфилктов слияния нет.</b>"
             case _:
                 text += "<b>❌ Есть конфликты слияния!! 😱</b>"
-        commits = gitlab_connect.get_commits(
-            project=gitlab_connect.get_projects(project_id=data.project.id),
-            branch_name=data.object_attributes.source_branch,
+
+        commits = await self.get_actual_commits(
+            sourse_branch=data.object_attributes.source_branch,
+            target_branch=data.object_attributes.target_branch,
+            project_id=data.project.id,
         )
+
         text += "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
         for commit in commits:
-            text += f"<b>{commit.author_name}</b> - {commit.message}"
-        await send_telegram_message(chat_id=settings.CHAT_ID, message=text)
+            # if commit.message.endswith("\n"):
+            #     text += f"<b>{commit.author_name}</b> - {commit.message}"
+            # else:
+            text += f"{commit}\n"
 
-        return "success"
+        return text
+
+    async def get_actual_commits(
+        self, sourse_branch: str, target_branch: str, project_id: int
+    ) -> list:
+        commits_source_branch = gitlab_connect.get_commits(
+            project=gitlab_connect.get_projects(project_id=project_id),
+            branch_name=sourse_branch,
+        )
+        commits_target_branch = gitlab_connect.get_commits(
+            project=gitlab_connect.get_projects(project_id=project_id),
+            branch_name=target_branch,
+        )
+        # Приводим сообщения коммитов к единому виду, включая имя автора, и собираем их в множества
+        messages_source = {
+            f"<b>{commit.author_name}</b> - {commit.message}".replace("\n", "")
+            for commit in commits_source_branch
+        }
+        messages_target = {
+            f"<b>{commit.author_name}</b> - {commit.message}".replace("\n", "")
+            for commit in commits_target_branch
+        }
+
+        unique_to_source = messages_source - messages_target
+
+        return unique_to_source
 
 
 @lru_cache()
-def get_create_message_service() -> CreateMessage:
-    return CreateMessage()
+def get_create_message_service(
+    session: AsyncSession = Depends(get_async_session),
+) -> CreateMessageService:
+    return CreateMessageService(session)
