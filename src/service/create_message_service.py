@@ -1,12 +1,22 @@
 from functools import lru_cache
 
+from fastapi import Depends
+
 from core.settings import settings
 from schemas.merge_request_schemas import WebhookPayload
+from db.aiosqlite import get_async_session
+from service.base_service import BaseService
 from utils.bot import send_telegram_message
 from utils.gitlab_connect import gitlab_connect
+from models.message import Message
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class CreateMessage:
+class CreateMessageService(BaseService):
+    model = Message
+
+    def __init__(self, session: AsyncSession):
+        super().__init__(session)
 
     async def create_message_merge_request(self, data: WebhookPayload) -> str:
         text = (
@@ -38,5 +48,7 @@ class CreateMessage:
 
 
 @lru_cache()
-def get_create_message_service() -> CreateMessage:
-    return CreateMessage()
+def get_create_message_service(
+    session: AsyncSession = Depends(get_async_session)
+) -> CreateMessageService:
+    return CreateMessageService(session)
