@@ -12,7 +12,7 @@ import aiogram
 from src.core.settings import settings
 from src.telegram_bot.bot_main import dp, bot
 
-WEBHOOK_URL = f"{settings.SERVER_URL}/api/v1/bot"
+WEBHOOK_URL = f"{settings.SERVER_URL}/gitlab-gateway/api/v1/bot"
 
 router = APIRouter()
 
