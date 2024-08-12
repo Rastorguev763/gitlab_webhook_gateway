@@ -12,7 +12,7 @@ class Setting(BaseSettings):
     TYPING: bool = False
 
     # Настройки базы данных SQLite
-    DABABASE_NAME: str = Field(default="GilabGeteway", alias="DABABASE_NAME")
+    DABABASE_NAME: str = Field(default="GitlabGeteway", alias="DABABASE_NAME")
 
     # Настройки GitLab репозитория
     PRIVATE_TOKEN: str = Field(default="", alias="PRIVATE_TOKEN", required=True)

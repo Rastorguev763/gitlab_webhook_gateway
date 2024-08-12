@@ -44,17 +44,17 @@ class CreateMessageService(BaseService):
         for commit in commits:
             text += f"<b>{commit.author_name}</b> - {commit.message}"
         msg = await send_telegram_message(chat_id=settings.CHAT_ID, message=text)
-        # print(f"\n\n{msg}\n\n")
         message = Message(
             telegram_id=settings.BOT_TOKEN.split(":")[0],
             tread=settings.THREAD_ID,
             caht_id=settings.CHAT_ID,
-            message_id=1,
+            message_id=msg.message_id,
             merge_request_id=data.object_attributes.iid,
             action_merge_request=data.object_attributes.action,
-            # status_merge_request =
+            status_merge_request=data.object_attributes.state,
+            # TODO: доделать время
             # created_at_merge_request=data.object_attributes.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            #                     updated_at_merge_request =
+            # updated_at_merge_request =
         )
         self._session.add(message)
         await self._session.commit()
