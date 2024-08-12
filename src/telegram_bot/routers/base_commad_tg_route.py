@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
+from src.core.logger import logger
 router = Router(name=__name__)
 
 
@@ -23,4 +24,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
         ),
         reply_markup=ReplyKeyboardRemove(),
     )
-    await message.delete()
+    try:
+        await message.delete()
+    except Exception as e:
+        logger.error(f"Error deleting message: {e}")
