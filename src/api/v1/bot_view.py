@@ -4,14 +4,13 @@
 
 import asyncio
 
+import aiogram
 from aiogram import types
 from fastapi import APIRouter
-import aiogram
 
-
-from src.core.settings import settings
 from src.core.logger import logger
-from src.telegram_bot.bot_main import dp, bot
+from src.core.settings import settings
+from src.telegram_bot.bot_main import bot, dp
 
 WEBHOOK_URL = f"{settings.SERVER_URL}/gitlab-gateway/api/v1/bot"
 
