@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
 from src.core.logger import logger
+
 router = Router(name=__name__)
 
 
@@ -19,7 +20,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
 
     await message.answer(
         text=(
-            f"Здравствуйте, {message.from_user.full_name}! Ваш telegram_id: {message.from_user.id}."
+            f"Здравствуйте, {message.from_user.full_name}! Ваш telegram_id: {message.from_user.id}.\n"
             "Я буду информировать о важных действиях в вашем репозитории Git Lab."
         ),
         reply_markup=ReplyKeyboardRemove(),
