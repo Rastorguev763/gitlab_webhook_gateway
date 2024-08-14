@@ -9,8 +9,8 @@ from src.core.settings import settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    docs_url="/gitlab-gateway/api/openapi",
-    openapi_url="/gitlab-gateway/api/openapi.json",
+    docs_url="/gitlab-gateway/api/openapi" if settings.MODE == "DEV" else None,
+    openapi_url="/gitlab-gateway/api/openapi.json" if settings.MODE == "DEV" else None,
     default_response_class=ORJSONResponse,
 )
 
