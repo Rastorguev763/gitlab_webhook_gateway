@@ -16,7 +16,7 @@
 
 ### Требования
 
-- Python 3.8+
+- Python 3.11+
 - Poetry
 
 ### Установка
@@ -24,7 +24,7 @@
 1. Клонируйте репозиторий:
 
     ```bash
-    git clone https://github.com/yourusername/gitlab-gateway.git
+    git clone https://github.com/Rastorguev763/gitlab_webhook_gateway
     cd gitlab-gateway
     ```
 
@@ -32,6 +32,12 @@
 
     ```bash
     poetry install
+    ```
+
+    Если `poetry` не установлен сначала установите:
+
+    ```bash
+    pip install poetry
     ```
 
 3. Активируйте виртуальное окружение, созданное `poetry`:
@@ -48,12 +54,14 @@
     MODE=DEV
     PRIVATE_TOKEN=your_gitlab_private_token
     BOT_TOKEN=your_telegram_bot_token
-    SERVER_URL=https://your_server_url
+    SERVER_URL=https://your_server_url - используется для получения вебхуков от Telegram
     CHAT_ID=your_chat_id
     THREAD_ID=your_thread_id
     ```
 
-2. Настройте URL для GitLab вебхуков на вашем сервере. Вебхук должен указывать на URL:
+    Базовые переменные находятся в `.env.template`
+
+2. Настройте URL в настройках проекта для GitLab вебхуков на вашем сервере. Вебхук должен указывать на URL:
 
     ```url
     https://your_server_url/api/v1/webhook
@@ -66,3 +74,15 @@
 ```bash
 uvicorn src.main:app --host 0.0.0.0 --port 8050 --reload
 ```
+
+Для получений вебхуков от Telegram на локальный компьютер нужно настроить туннелирование, например с помощь `ngrok` и прописать соответсвующий адрес в `SERVER_URL` `.env` файла.
+
+## Запуск с помощью Docker Compose
+
+После настройки `.env` файла конфигурации, выполните команду:
+
+```bash
+docker compose up -d
+```
+
+Docker создаст контейнер с приложением и установит все необходимые зависимости.
