@@ -112,6 +112,20 @@ class CreateMessageService(BaseService):
                     reply_to_message_id=one_message.message_id,
                     thread_id=settings.THREAD_ID,
                 )
+            case "updated":
+                one_message = await self.get_message_by_mr_id(
+                    merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                )
+                await send_telegram_message(
+                    chat_id=settings.CHAT_ID,
+                    message=(
+                        f"<b>👤 {data.user.name}</b> обновил слияние:"
+                        "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
+                        f"{data.object_attributes.last_commit}"
+                    ),
+                    reply_to_message_id=one_message.message_id,
+                    thread_id=settings.THREAD_ID,
+                )
         return "success"
 
     async def get_message_by_mr_id(
