@@ -112,7 +112,7 @@ class CreateMessageService(BaseService):
                     reply_to_message_id=one_message.message_id,
                     thread_id=settings.THREAD_ID,
                 )
-            case "updated":
+            case "update":
                 one_message = await self.get_message_by_mr_id(
                     merge_request_id=data.object_attributes.iid, project_name=data.project.name
                 )
