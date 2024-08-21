@@ -98,4 +98,4 @@ class WebhookPayload(BaseModel):
     project: Project
     object_attributes: ObjectAttributes
     repository: Repository
-    assignees: Optional[List[Optional[User]]]
+    assignees: Optional[List[Optional[User]]] = None

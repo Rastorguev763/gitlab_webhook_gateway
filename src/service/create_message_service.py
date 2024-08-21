@@ -1,16 +1,18 @@
 from functools import lru_cache
-from sqlalchemy import select
 
 from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.logger import logger
 from src.core.settings import settings
-from src.schemas.merge_request_schemas import WebhookPayload
 from src.db.aiosqlite import get_async_session
+from src.exceptions.base_exceptions import ObjectNotFound
+from src.models.message import Message
+from src.schemas.merge_request_schemas import WebhookPayload
 from src.service.base_service import BaseService
 from src.utils.bot import send_telegram_message
 from src.utils.gitlab_connect import gitlab_connect
-from src.models.message import Message
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CreateMessageService(BaseService):
@@ -36,7 +38,7 @@ class CreateMessageService(BaseService):
 
         match message.status_merge_request:
             case "merged":
-                one_message = await self.get_message_by_tg_id(
+                one_message = await self.get_message_by_mr_id(
                     merge_request_id=data.object_attributes.iid, project_name=data.project.name
                 )
                 await send_telegram_message(
@@ -47,7 +49,7 @@ class CreateMessageService(BaseService):
                 )
             case "opened":
                 if data.object_attributes.action == "approved":
-                    one_message = await self.get_message_by_tg_id(
+                    one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
                     await send_telegram_message(
@@ -57,7 +59,7 @@ class CreateMessageService(BaseService):
                         thread_id=settings.THREAD_ID,
                     )
                 elif data.object_attributes.action == "reopen":
-                    one_message = await self.get_message_by_tg_id(
+                    one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
                     await send_telegram_message(
@@ -67,12 +69,26 @@ class CreateMessageService(BaseService):
                         thread_id=settings.THREAD_ID,
                     )
                 elif data.object_attributes.action == "unapproved":
-                    one_message = await self.get_message_by_tg_id(
+                    one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
                     await send_telegram_message(
                         chat_id=settings.CHAT_ID,
                         message=f"<b>👤 {data.user.name}</b> апрув отозвал! 👎🏻",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
+                elif data.object_attributes.action == "updated":
+                    one_message = await self.get_message_by_mr_id(
+                        merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                    )
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message=(
+                            f"<b>👤 {data.user.name}</b> обновил слияние:"
+                            "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
+                            f"{data.object_attributes.last_commit}"
+                        ),
                         reply_to_message_id=one_message.message_id,
                         thread_id=settings.THREAD_ID,
                     )
@@ -87,7 +103,7 @@ class CreateMessageService(BaseService):
                     self._session.add(message)
                     await self._session.commit()
             case "closed":
-                one_message = await self.get_message_by_tg_id(
+                one_message = await self.get_message_by_mr_id(
                     merge_request_id=data.object_attributes.iid, project_name=data.project.name
                 )
                 await send_telegram_message(
@@ -96,19 +112,39 @@ class CreateMessageService(BaseService):
                     reply_to_message_id=one_message.message_id,
                     thread_id=settings.THREAD_ID,
                 )
+            case "update":
+                one_message = await self.get_message_by_mr_id(
+                    merge_request_id=data.object_attributes.iid, project_name=data.project.name
+                )
+                await send_telegram_message(
+                    chat_id=settings.CHAT_ID,
+                    message=(
+                        f"<b>👤 {data.user.name}</b> обновил слияние:"
+                        "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
+                        f"{data.object_attributes.last_commit}"
+                    ),
+                    reply_to_message_id=one_message.message_id,
+                    thread_id=settings.THREAD_ID,
+                )
         return "success"
 
-    async def get_message_by_tg_id(
+    async def get_message_by_mr_id(
         self,
         project_name: str,
         merge_request_id: int,
     ) -> Message:
-        message_result = await self._session.execute(
-            select(Message)
-            .filter(Message.project_name == project_name)
-            .filter(Message.merge_request_id == merge_request_id)
-        )
-        message = message_result.scalar_one_or_none()
+        try:
+            message_result = await self._session.execute(
+                select(Message)
+                .filter(Message.project_name == project_name)
+                .filter(Message.merge_request_id == merge_request_id)
+            )
+            message = message_result.scalar_one_or_none()
+            if not message:
+                logger.error("Message info from merge request not found")
+                raise ObjectNotFound(detail="Message info from merge request not found")
+        except Exception as e:
+            logger.error(f"Error get info message from merge request in database: {e}")
         return message
 
     async def create_message_text(
@@ -128,9 +164,9 @@ class CreateMessageService(BaseService):
         )
         match data.object_attributes.merge_status:
             case "can_be_merged":
-                text += "<b>✅ Конфилктов слияния нет.</b>"
+                text += "<b>✅ Конфликтов слияния нет.</b>"
             case "checking":
-                text += "<b>✅ Конфилктов слияния нет.</b>"
+                text += "<b>✅ Конфликтов слияния нет.</b>"
             case _:
                 text += "<b>❌ Есть конфликты слияния!! 😱</b>"
 
@@ -142,9 +178,6 @@ class CreateMessageService(BaseService):
 
         text += "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
         for commit in commits:
-            # if commit.message.endswith("\n"):
-            #     text += f"<b>{commit.author_name}</b> - {commit.message}"
-            # else:
             text += f"{commit}\n"
 
         return text
@@ -162,11 +195,11 @@ class CreateMessageService(BaseService):
         )
         # Приводим сообщения коммитов к единому виду, включая имя автора, и собираем их в множества
         messages_source = {
-            f"<b>{commit.author_name}</b> - {commit.message}".replace("\n", "")
+            f"<b>{commit.author_name}</b> - {commit.message}".rstrip("\n")
             for commit in commits_source_branch
         }
         messages_target = {
-            f"<b>{commit.author_name}</b> - {commit.message}".replace("\n", "")
+            f"<b>{commit.author_name}</b> - {commit.message}".rstrip("\n")
             for commit in commits_target_branch
         }
 
