@@ -152,3 +152,4 @@ redis_data/
 pg_data/
 pay_postgres_data_test
 sketch.py
+gitlab_gateway_data/

@@ -6,6 +6,8 @@ services:
     command: ./start.sh
     restart: unless-stopped
     container_name: gitlab_gateway
+    volumes:
+      - ./gitlab_gateway_data:/usr/src/app/gitlab_gateway_data
     expose:
       - "8050"
     ports:

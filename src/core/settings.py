@@ -40,13 +40,13 @@ class Setting(BaseSettings):
 
     @property
     def database_url_async(self):
-        return "sqlite+aiosqlite:///./{name}.db".format(
+        return "sqlite+aiosqlite:///./gitlab_gateway_data/{name}.db".format(
             name=self.DABABASE_NAME,
         )
 
     @property
     def database_url_sync(self):
-        return "sqlite:///./{name}.db".format(
+        return "sqlite:///./gitlab_gateway_data/{name}.db".format(
             name=self.DABABASE_NAME,
         )
 
