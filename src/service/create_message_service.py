@@ -89,7 +89,7 @@ class CreateMessageService(BaseService):
                         message=(
                             f"<b>👤 {data.user.name}</b> обновил слияние:"
                             "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
-                            f"{data.object_attributes.last_commit}"
+                            f"{data.object_attributes.last_commit.title}"
                         ),
                         reply_to_message_id=one_message.message_id,
                         thread_id=settings.THREAD_ID,
@@ -123,7 +123,7 @@ class CreateMessageService(BaseService):
                     message=(
                         f"<b>👤 {data.user.name}</b> обновил слияние:"
                         "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
-                        f"{data.object_attributes.last_commit}"
+                        f"{data.object_attributes.last_commit.title}"
                     ),
                     reply_to_message_id=one_message.message_id,
                     thread_id=settings.THREAD_ID,
