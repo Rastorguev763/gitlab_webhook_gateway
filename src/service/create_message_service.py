@@ -262,32 +262,65 @@ class CreateMessageService(BaseService):
                 one_message = await self.get_message_by_ppln_id(
                     pipeline_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
-                    chat_id=settings.CHAT_ID,
-                    message="🚀 Запущена...",
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
-                )
+                if (
+                    len(data.object_attributes.stages) == 1
+                    and "test" in data.object_attributes.stages
+                ):
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message="🚀 Запущены тесты...",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
+                else:
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message="🚀 Запущена...",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
             case "success":
                 one_message = await self.get_message_by_ppln_id(
                     pipeline_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
-                    chat_id=settings.CHAT_ID,
-                    message="✅ Закончилась успешно.\nПриложение развернуто! 🥳",
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
-                )
+                if (
+                    len(data.object_attributes.stages) == 1
+                    and "test" in data.object_attributes.stages
+                ):
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message="✅ Тесты успешно прошли! 🥳",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
+                else:
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message="✅ Закончилась успешно.\nПриложение развернуто! 🥳",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
             case "failed":
                 one_message = await self.get_message_by_ppln_id(
                     pipeline_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
-                    chat_id=settings.CHAT_ID,
-                    message="❌ Закончилась не успешно! 😱\nПроверь логи сборки.",
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
-                )
+                if (
+                    len(data.object_attributes.stages) == 1
+                    and "test" in data.object_attributes.stages
+                ):
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message="❌ Тесты не прошли! 😱\nПроверь логи сборки.",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
+                else:
+                    await send_telegram_message(
+                        chat_id=settings.CHAT_ID,
+                        message="❌ Закончилась не успешно! 😱\nПроверь логи сборки.",
+                        reply_to_message_id=one_message.message_id,
+                        thread_id=settings.THREAD_ID,
+                    )
 
             case "canceled":
                 one_message = await self.get_message_by_ppln_id(
