@@ -12,7 +12,7 @@ from src.models.message import Message, MessagePipeline
 from src.schemas.merge_request_schemas import WebhookPayload
 from src.schemas.pipeline_schemas import PipelineSchemas
 from src.service.base_service import BaseService
-from src.utils.bot import send_message_reaction, send_telegram_message
+from src.utils.bot import send_message_reaction, send_telegram_message, update_message_text
 from src.utils.gitlab_connect import gitlab_connect
 
 
@@ -49,55 +49,64 @@ class CreateMessageService(BaseService):
                 #     reply_to_message_id=one_message.message_id,
                 #     thread_id=settings.THREAD_ID,
                 # )
-                await send_message_reaction(
+                await update_message_text(
                         chat_id=settings.CHAT_ID,
                         message_id=one_message.message_id,
-                        reaction="🎉",
+                        new_text=(
+                            await self.create_message_text(data=data)
+                            + f"\nСмержено! 🥳👏🏻\nВсе валить на <b>{data.user.name}</b>"
+                        ),
                     )
+                await send_message_reaction(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    reaction="🎉",
+                )
             case "opened":
                 if data.object_attributes.action == "approved":
                     one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
-                    await send_telegram_message(
+                    await update_message_text(
                         chat_id=settings.CHAT_ID,
-                        message=f"<b>👤 {data.user.name}</b> за качество отвечает. Апрувнуто! 💪🏻",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
+                        message_id=one_message.message_id,
+                        new_text=(
+                            await self.create_message_text(data=data)
+                            + f"\n<b>👤 {data.user.name}</b> за качество отвечает. Апрувнуто! 💪🏻"
+                        ),
                     )
                 elif data.object_attributes.action == "reopen":
                     one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
-                    await send_telegram_message(
+                    await update_message_text(
                         chat_id=settings.CHAT_ID,
-                        message=f"<b>👤 {data.user.name}</b> сново открыл слияние! 👋🏻",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
+                        message_id=one_message.message_id,
+                        new_text=(
+                            await self.create_message_text(data=data)
+                            + f"\n<b>👤 {data.user.name}</b> сново открыл слияние! 👋🏻"
+                        ),
                     )
                 elif data.object_attributes.action == "unapproved":
                     one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
-                    await send_telegram_message(
+                    await update_message_text(
                         chat_id=settings.CHAT_ID,
-                        message=f"<b>👤 {data.user.name}</b> апрув отозвал! 👎🏻",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
+                        message_id=one_message.message_id,
+                        new_text=(
+                            await self.create_message_text(data=data)
+                            + f"\n<b>👤 {data.user.name}</b> апрув отозвал! 👎🏻"
+                        ),
                     )
                 elif data.object_attributes.action == "update":
                     one_message = await self.get_message_by_mr_id(
                         merge_request_id=data.object_attributes.iid, project_name=data.project.name
                     )
-                    await send_telegram_message(
+                    await update_message_text(
                         chat_id=settings.CHAT_ID,
-                        message=(
-                            f"<b>👤 {data.user.name}</b> обновил слияние:"
-                            "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
-                            f"{data.object_attributes.last_commit.title}"
-                        ),
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
+                        message_id=one_message.message_id,
+                        new_text=await self.create_message_text(data=data),
                     )
                 else:
                     msg = await send_telegram_message(
@@ -113,26 +122,28 @@ class CreateMessageService(BaseService):
                 one_message = await self.get_message_by_mr_id(
                     merge_request_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
+                await update_message_text(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        new_text=(
+                            await self.create_message_text(data=data)
+                            + f"\n<b>👤 {data.user.name}</b> закрыл слияние! 😭"
+                        ),
+                    )
+                await send_message_reaction(
                     chat_id=settings.CHAT_ID,
-                    message=f"<b>👤 {data.user.name}</b> закрыл слияние! 😭",
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
+                    message_id=one_message.message_id,
+                    reaction="😭",
                 )
             case "update":
                 one_message = await self.get_message_by_mr_id(
                     merge_request_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
-                    chat_id=settings.CHAT_ID,
-                    message=(
-                        f"<b>👤 {data.user.name}</b> обновил слияние:"
-                        "\n------------------\n<b>⚙️ ИЗМЕНЕНИЯ В КОДЕ ⚙️</b>\n------------------\n"
-                        f"{data.object_attributes.last_commit.title}"
-                    ),
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
-                )
+                await update_message_text(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        new_text=await self.create_message_text(data=data),
+                    )
         return "success"
 
     async def get_message_by_mr_id(
@@ -243,16 +254,16 @@ class CreateMessageService(BaseService):
             status_pipeline=data.object_attributes.status,
         )
 
+        text = (
+            f"<b>📬 <a href='{data.object_attributes.url}'>"
+            f"Новая сборочная линия: № {data.object_attributes.id}</a></b>\n\n"
+            f"<b>🗂 Проект:</b> {data.project.name}\n"
+            f"<b>🌳 Ветка:</b> {data.object_attributes.ref}\n"
+            f"<b>👤 Создатель события:</b> {data.user.name}\n"
+            f"<b>📅 Дата:</b> {data.object_attributes.created_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        )
         match message_pipeline.status_pipeline:
             case "pending":
-                text = (
-                    f"<b>📬 <a href='{data.object_attributes.url}'>"
-                    f"Новая сборочная линия: № {data.object_attributes.id}</a></b>\n\n"
-                    f"<b>🗂 Проект:</b> {data.project.name}\n"
-                    f"<b>🌳 Ветка:</b> {data.object_attributes.ref}\n"
-                    f"<b>👤 Создатель события:</b> {data.user.name}\n"
-                    f"<b>📅 Дата:</b> {data.object_attributes.created_at.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                )
                 msg = await send_telegram_message(
                     chat_id=settings.CHAT_ID,
                     message=text,
@@ -271,29 +282,20 @@ class CreateMessageService(BaseService):
                     len(data.object_attributes.stages) == 1
                     and "test" in data.object_attributes.stages
                 ):
-                    await send_telegram_message(
-                        chat_id=settings.CHAT_ID,
-                        message="🚀 Запущены тесты...",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
-                    )
-                    await send_message_reaction(
-                        chat_id=settings.CHAT_ID,
-                        message_id=one_message.message_id,
-                        reaction="👀",
-                    )
+                    new_text = text + "🚀 Запущены тесты...\n"
+
                 else:
-                    await send_telegram_message(
-                        chat_id=settings.CHAT_ID,
-                        message="🚀 Запущена...",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
-                    )
-                    await send_message_reaction(
-                        chat_id=settings.CHAT_ID,
-                        message_id=one_message.message_id,
-                        reaction="⚡",
-                    )
+                    new_text = text + "🚀 Запущен деплой приложения...\n"
+                await update_message_text(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    new_text=new_text,
+                )
+                await send_message_reaction(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    reaction="👀",
+                )
             case "success":
                 one_message = await self.get_message_by_ppln_id(
                     pipeline_id=data.object_attributes.iid, project_name=data.project.name
@@ -302,29 +304,19 @@ class CreateMessageService(BaseService):
                     len(data.object_attributes.stages) == 1
                     and "test" in data.object_attributes.stages
                 ):
-                    await send_telegram_message(
-                        chat_id=settings.CHAT_ID,
-                        message="✅ Тесты успешно прошли! 🥳",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
-                    )
-                    await send_message_reaction(
-                        chat_id=settings.CHAT_ID,
-                        message_id=one_message.message_id,
-                        reaction="🔥",
-                    )
+                    new_text = text + "✅ Тесты успешно прошли! 🥳\n"
                 else:
-                    await send_telegram_message(
-                        chat_id=settings.CHAT_ID,
-                        message="✅ Закончилась успешно.\nПриложение развернуто! 🥳",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
-                    )
-                    await send_message_reaction(
-                        chat_id=settings.CHAT_ID,
-                        message_id=one_message.message_id,
-                        reaction="👍",
-                    )
+                    new_text = text + "✅ Деплой закончился успешно.\nПриложение развернуто! 🥳\n"
+                await update_message_text(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    new_text=new_text,
+                )
+                await send_message_reaction(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    reaction="👍",
+                )
             case "failed":
                 one_message = await self.get_message_by_ppln_id(
                     pipeline_id=data.object_attributes.iid, project_name=data.project.name
@@ -333,29 +325,33 @@ class CreateMessageService(BaseService):
                     len(data.object_attributes.stages) == 1
                     and "test" in data.object_attributes.stages
                 ):
-                    await send_telegram_message(
-                        chat_id=settings.CHAT_ID,
-                        message="❌ Тесты не прошли! 😱\nПроверь логи сборки.",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
-                    )
+                    new_text = text + "❌ Тесты не прошли! 😱\nПроверь логи сборки."
                 else:
-                    await send_telegram_message(
-                        chat_id=settings.CHAT_ID,
-                        message="❌ Закончилась не успешно! 😱\nПроверь логи сборки.",
-                        reply_to_message_id=one_message.message_id,
-                        thread_id=settings.THREAD_ID,
-                    )
-
+                    new_text = text + "❌ Деплой закончилась провалом! 😱\nПроверь логи сборки."
+                await update_message_text(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    new_text=new_text,
+                )
+                await send_message_reaction(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    reaction="👎",
+                )
             case "canceled":
                 one_message = await self.get_message_by_ppln_id(
                     pipeline_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
+                new_text = text + "❌ Сборочная линия отменена!"
+                await update_message_text(
                     chat_id=settings.CHAT_ID,
-                    message="❌ Сборочная линия отменена!",
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
+                    message_id=one_message.message_id,
+                    new_text=new_text,
+                )
+                await send_message_reaction(
+                    chat_id=settings.CHAT_ID,
+                    message_id=one_message.message_id,
+                    reaction="😭",
                 )
 
 
