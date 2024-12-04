@@ -12,12 +12,12 @@ from src.models.message import Message, MessagePipeline
 from src.schemas.merge_request_schemas import WebhookPayload
 from src.schemas.pipeline_schemas import PipelineSchemas
 from src.service.base_service import BaseService
-from src.utils.bot import send_telegram_message
+from src.utils.bot import send_message_reaction, send_telegram_message
 from src.utils.gitlab_connect import gitlab_connect
 
 
 class CreateMessageService(BaseService):
-    model = Message
+    model: Message = Message
     pipeline_model = MessagePipeline
 
     def __init__(self, session: AsyncSession):
@@ -25,7 +25,7 @@ class CreateMessageService(BaseService):
 
     async def create_message_merge_request(self, data: WebhookPayload) -> str:
 
-        message = self.model(
+        message: Message = self.model(
             telegram_id=settings.BOT_TOKEN.split(":")[0],
             tread=settings.THREAD_ID,
             chat_id=settings.CHAT_ID,
@@ -43,12 +43,17 @@ class CreateMessageService(BaseService):
                 one_message = await self.get_message_by_mr_id(
                     merge_request_id=data.object_attributes.iid, project_name=data.project.name
                 )
-                await send_telegram_message(
-                    chat_id=settings.CHAT_ID,
-                    message=f"Смержено! 🥳👏🏻\nВсе валить на <b>{data.user.name}</b> ",
-                    reply_to_message_id=one_message.message_id,
-                    thread_id=settings.THREAD_ID,
-                )
+                # await send_telegram_message(
+                #     chat_id=settings.CHAT_ID,
+                #     message=f"Смержено! 🥳👏🏻\nВсе валить на <b>{data.user.name}</b> ",
+                #     reply_to_message_id=one_message.message_id,
+                #     thread_id=settings.THREAD_ID,
+                # )
+                await send_message_reaction(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        reaction="🎉",
+                    )
             case "opened":
                 if data.object_attributes.action == "approved":
                     one_message = await self.get_message_by_mr_id(
@@ -272,12 +277,22 @@ class CreateMessageService(BaseService):
                         reply_to_message_id=one_message.message_id,
                         thread_id=settings.THREAD_ID,
                     )
+                    await send_message_reaction(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        reaction="👀",
+                    )
                 else:
                     await send_telegram_message(
                         chat_id=settings.CHAT_ID,
                         message="🚀 Запущена...",
                         reply_to_message_id=one_message.message_id,
                         thread_id=settings.THREAD_ID,
+                    )
+                    await send_message_reaction(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        reaction="⚡",
                     )
             case "success":
                 one_message = await self.get_message_by_ppln_id(
@@ -293,12 +308,22 @@ class CreateMessageService(BaseService):
                         reply_to_message_id=one_message.message_id,
                         thread_id=settings.THREAD_ID,
                     )
+                    await send_message_reaction(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        reaction="🔥",
+                    )
                 else:
                     await send_telegram_message(
                         chat_id=settings.CHAT_ID,
                         message="✅ Закончилась успешно.\nПриложение развернуто! 🥳",
                         reply_to_message_id=one_message.message_id,
                         thread_id=settings.THREAD_ID,
+                    )
+                    await send_message_reaction(
+                        chat_id=settings.CHAT_ID,
+                        message_id=one_message.message_id,
+                        reaction="👍",
                     )
             case "failed":
                 one_message = await self.get_message_by_ppln_id(
