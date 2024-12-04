@@ -40,4 +40,9 @@ async def send_message_reaction(
 async def update_message_text(chat_id: str, message_id: str, new_text: str):
 
     # Редактируем сообщение
-    await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_text)
+    await bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=message_id,
+        text=new_text,
+        disable_web_page_preview=True,
+    )
