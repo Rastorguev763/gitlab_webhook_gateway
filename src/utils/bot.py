@@ -25,13 +25,13 @@ async def send_telegram_message(
 
 async def send_message_reaction(
     chat_id: int,
-    message: str,
+    message_id: str,
     reaction: str,
 ):
     """Асинхронная функция для установки реакции на сообщение."""
 
     return await bot.set_message_reaction(
         chat_id=chat_id,
-        message_id=message,
+        message_id=message_id,
         reaction=[ReactionTypeEmoji(emoji=reaction)],
     )
