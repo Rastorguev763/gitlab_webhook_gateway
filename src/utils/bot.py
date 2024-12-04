@@ -1,4 +1,5 @@
 from src.telegram_bot.bot_main import bot
+from aiogram.types import ReactionTypeEmoji
 
 
 async def send_telegram_message(
@@ -20,3 +21,17 @@ async def send_telegram_message(
             disable_web_page_preview=True,
             reply_to_message_id=reply_to_message_id,
         )
+
+
+async def send_message_reaction(
+    chat_id: int,
+    message: str,
+    reaction: str,
+):
+    """Асинхронная функция для установки реакции на сообщение."""
+
+    return await bot.set_message_reaction(
+        chat_id=chat_id,
+        message_id=message,
+        reaction=[ReactionTypeEmoji(emoji=reaction)],
+    )
